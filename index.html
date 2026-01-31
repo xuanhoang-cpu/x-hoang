@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Lãnh Đạo UBND xã</title>
+
+<style>
+*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+body{margin:0;background:#f4f6f8}
+.container{max-width:1100px;margin:50px auto;text-align:center}
+h1{color:#0d47a1;margin-bottom:40px}
+
+/* ẢNH */
+.person-img{
+    width:160px;height:220px;object-fit:cover;
+    border-radius:12px;border:4px solid #1565c0;
+    cursor:pointer;
+}
+.role{color:#1565c0;font-weight:600;margin-top:8px}
+h3{margin:6px 0 0}
+
+/* BỐ CỤC */
+.chairman{margin-bottom:60px}
+.deputies{display:flex;justify-content:center;gap:50px;flex-wrap:wrap}
+
+/* MODAL */
+.modal{
+    display:none;position:fixed;inset:0;
+    background:rgba(0,0,0,.6);
+    justify-content:center;align-items:center;z-index:999
+}
+.modal-content{
+    background:#fff;width:650px;max-width:95%;
+    padding:25px;border-radius:12px;position:relative
+}
+.modal-content img{
+    width:180px;height:240px;object-fit:cover;
+    border-radius:10px;border:4px solid #1565c0
+}
+.modal-content h2{margin:15px 0 5px}
+.desc-box{
+    margin-top:15px;
+    max-height:300px;
+    overflow-y:auto;
+    padding-right:10px
+}
+.desc-box p{
+    text-align:justify;
+    line-height:1.65;
+    margin-bottom:10px;
+    font-size:15px
+}
+.close{
+    position:absolute;top:10px;right:15px;
+    font-size:26px;cursor:pointer
+}
+
+/* QUẢN TRỊ */
+.admin-bar{text-align:right;margin-bottom:15px}
+.admin-bar button{
+    padding:6px 12px;
+    background:#1565c0;color:#fff;
+    border:none;border-radius:4px;cursor:pointer
+}
+input[type=file]{display:none}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h1>LÃNH ĐẠO UBND XÃ</h1>
+
+<div class="admin-bar">
+<button onclick="adminLogin()">Quản trị</button>
+<input type="file" id="imgUpload" accept="image/*" onchange="uploadImg(event)">
+</div>
+
+<!-- CHỦ TỊCH -->
+<div class="chairman">
+<img id="img1" class="person-img" src=""
+ onclick="openModal('img1','ĐẶNG ĐÌNH TRIỀU','Chủ tịch UBND xã', chairmanDesc)">
+<p class="role">Chủ tịch UBND xã</p>
+<h3>ĐẶNG ĐÌNH TRIỀU</h3>
+</div>
+
+<!-- PHÓ CHỦ TỊCH -->
+<div class="deputies">
+<div>
+<img id="img2" class="person-img" src=""
+ onclick="openModal('img2','TRẦN PHÚC HUY','Phó Chủ tịch UBND xã', deputy1Desc)">
+<p class="role">Phó Chủ tịch</p>
+<h3>TRẦN PHÚC HUY</h3>
+</div>
+
+<div>
+<img id="img3" class="person-img" src=""
+ onclick="openModal('img3','HUỲNH TẤN CƯỜNG','Phó Chủ tịch UBND xã', deputy2Desc)">
+<p class="role">Phó Chủ tịch</p>
+<h3>HUỲNH TẤN CƯỜNG</h3>
+</div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal()">×</span>
+<img id="modalImg">
+<h2 id="modalName"></h2>
+<div class="role" id="modalRole"></div>
+<div class="desc-box" id="modalDesc"></div>
+</div>
+</div>
+
+<script>
+const adminPassword="admin123";
+let currentImgId="";
+
+/* ===== GIỚI THIỆU ===== */
+const chairmanDesc=`
+<p>- Lãnh đạo, chỉ đạo toàn diện mọi mặt hoạt động thuộc nhiệm vụ, quyền hạn của UBND xã, Chủ tịch UBND xã theo Luật Tổ chức chính quyền địa phương.</p>
+<p>- Chỉ đạo, điều hành chung về công tác quy hoạch, kế hoạch, đầu tư phát triển kinh tế - xã hội và quản lý tài chính, ngân sách của xã.</p>
+<p>- Trực tiếp phụ trách, theo dõi và lãnh đạo, chỉ đạo:</p>
+<p>+ Xây dựng quy hoạch, kế hoạch, đầu tư phát triển kinh tế - xã hội, an ninh - quốc phòng của xã; những công việc lớn, quan trọng có tính chất chiến lược dài hạn của xã; những vấn đề mới, đột xuất trên tất cả các lĩnh vực công tác thuộc chức năng nhiệm vụ, quyền hạn của UBND xã; quyết định những giải pháp quan trọng, có tính chất đột phá trong chỉ đạo điều hành.</p>
+<p>+ Các lĩnh vực công tác: tổ chức cán bộ, quân sự, công an, kế hoạch, đầu tư, công tác xúc tiến đầu tư, công tác đối ngoại, chính quyền địa phương, địa giới hành chính, an toàn giao thông, thi đua khen thưởng, tư pháp, thi hành án dân sự, vận tải, xây dựng.</p>
+<p>+ Lĩnh vực dân tộc, tôn giáo, các chương trình mục tiêu quốc gia (Chương trình mục tiêu quốc gia xây dựng nông thôn mới; Chương trình mục tiêu quốc gia giảm nghèo bền vững).</p>
+<p>+ Tiếp công dân, giải quyết khiếu nại, tố cáo; phòng, chống tham nhũng, lãng phí, tiêu cực. Ủy quyền cho các Phó Chủ tịch UBND xã tiếp công dân, giải quyết khiếu nại, tố cáo, xử lý vi phạm hành chính.</p>
+<p>+ Ký ban hành các loại văn bản quy phạm pháp luật; các loại văn bản gửi UBND tỉnh, Đảng ủy, HĐND xã theo lĩnh vực phụ trách, theo dõi.</p>
+<p>+ Trưởng ban Ban Chỉ đạo các chương trình mục tiêu quốc gia; Trưởng ban Ban Chỉ đạo về triển khai các biện pháp chống khai thác hải sản bất hợp pháp, không báo cáo và không theo quy định (IUU); Chủ tịch Hội đồng, Trưởng ban Chỉ đạo các lĩnh vực phụ trách và các lĩnh vực khác theo quy định của UBND tỉnh hoặc khi cần thiết theo Quyết định của cấp có thẩm quyền.</p>
+<p>- Trực tiếp chỉ đạo hoặc giao Phó Chủ tịch UBND xã chủ trì, phối hợp giải quyết những vấn đề liên quan đến nhiều ngành, lĩnh vực.</p>
+<p>- Xử lý các công việc khác do các Phó Chủ tịch UBND xã phụ trách nhưng Chủ tịch UBND xã xét thấy cần thiết phải trực tiếp xử lý.</p>
+<p>- Giữ mối liên hệ giữa UBND với Thường trực Đảng ủy, HĐND xã, Ủy ban Mặt trận Tổ quốc Việt Nam xã. Phụ trách các thôn của xã Mỹ Đức cũ: An Giang Tây, An Giang Đông, Hòa Tân, Phú Hà, Tân Phú, Phú Hòa, Phú Thứ.</p>
+`;
+
+const deputy1Desc=`
+<p>- Phân công theo dõi, lãnh đạo và chỉ đạo các cơ quan: Phòng Văn hóa –xã hội, Trung tâm Phục vụ hành chính công xã và được ủy quyền xử lý công việc của UBND xã trong thời gian Chủ tịch UBND vắng mặt tại cơ quan.</p>
+<p>- Các lĩnh vực công tác: Theo dõi công tác Nội vụ, cải cách hành chính, khoa học và công nghệ, văn hóa, thể thao và du lịch, giáo dục mầm non, giáo dục phổ thông, y tế, lao động, việc làm, người có công, bình đẳng giới, bảo trợ xã hội, an toàn vệ sinh lao động, bảo hiểm xã hội, bảo hiểm y tế, thanh niên, phụ nữ, các tổ chức chính trị - xã hội xã, truyền thông, theo dõi và chỉ đạo giải quyết hồ sơ tại Trung tâm Phục vụ Hành chính công xã.</p>
+<p>- Theo dõi công tác thực hiện quy chế dân chủ ở cơ sở, công tác dân vận chính quyền.</p>
+<p>- Xử phạt vi phạm hành chính trong lĩnh vực theo dõi, phụ trách theo ủy quyền của Chủ tịch UBND xã.</p>
+<p>- Chủ tịch Hội đồng, Trưởng ban Chỉ đạo các lĩnh vực phụ trách và các lĩnh vực khác theo quy định của Trung ương, của Tỉnh hoặc theo Quyết định của cấp có thẩm quyền.</p>
+<p>- Định kỳ hằng tháng hoặc đột xuất theo yêu cầu của Chủ tịch UBND xã, báo cáo Chủ tịch UBND xã và tập thể Lãnh đạo UBND xã tình hình về các lĩnh vực công tác, về các phòng chuyên môn được phân công quản lý; nhận xét, đánh giá và đề xuất các vấn đề cần giải quyết.</p>
+<p>- Thay mặt Chủ tịch UBND xã thực hiện kiểm tra, đôn đốc các phòng chuyên môn thực hiện Nghị quyết, Kết luận, Thông báo của Đảng ủy, Ban Thường vụ Đảng ủy, HĐND xã, Thường trực HĐND xã; Quyết định, Chỉ thị, Chương trình, Kế hoạch công tác của UBND xã, Chủ tịch UBND xã và giải quyết các vấn đề liên quan đến lĩnh vực phụ trách.</p>
+<p>- Thực hiện các công việc, nhiệm vụ khác theo sự phân công, ủy quy���n của Chủ tịch UBND xã.</p>
+<p>- Phân công phụ trách địa bàn các thôn của xã Mỹ Châu cũ: Vạn Lương, Vạn Thiện, Lộc Thái, Quang Nghiễm, Vạn Thiết, Châu Trúc, Mỹ Trang, Trà Thung và Vạn An.</p>
+`;
+
+const deputy2Desc=`
+<p>Phân công theo dõi, lãnh đạo và chỉ đạo các cơ quan: Trực tiếp phụ trách, theo dõi và lãnh đạo, chỉ đạo: Phòng kinh tế và Văn phòng HĐND-UBND</p>
+<p>+ Các lĩnh vực công tác: giao thông, tài chính, ngân sách, thuế, quy hoạch, tài nguyên - môi trường, phát triển quỹ đất, chấp thuận chủ trương và điều chỉnh chủ trương đầu tư các dự án đầu tư trên địa bàn xã, thống kê.</p>
+<p>+ Phụ trách các dự án đầu tư; công tác bồi thường, giải phóng mặt bằng và tái định cư, giải quyết khiếu nại, tố cáo, kiến nghị theo ngành, lĩnh vực được phân công.</p>
+<p>+ Chủ tịch Hội đồng thẩm định giá đất của xã; Chủ tịch Hội đồng, Trưởng ban Chỉ đạo các lĩnh vực phụ trách và các lĩnh vực khác theo quy định của tỉnh hoặc theo Quyết định của cấp có thẩm quyền.</p>
+<p>- Lãnh đạo, chỉ đạo việc triển khai nhiệm vụ trọng tâm của lĩnh vực theo dõi, phụ trách.</p>
+</p>- Xử phạt vi phạm hành chính trong lĩnh vực theo dõi, phụ trách theo ủy quyền của Chủ tịch UBND xã.</p>
+<p>+ Phụ trách công tác bồi thường, giải phóng mặt bằng và tái định cư; thanh tra, giải quyết khiếu nại, tố cáo, kiến nghị, kiểm toán theo ngành, lĩnh vực được phân công.</p>
+<p>- Định kỳ hằng tháng hoặc đột xuất theo yêu cầu của Chủ tịch UBND xã, báo cáo Chủ tịch UBND xã và tập thể Lãnh đạo UBND xã tình hình về các lĩnh vực công tác, về các cơ quan, đơn vị được phân công quản lý; nhận xét, đánh giá và đề xuất các vấn đề cần giải quyết.</p>
+<p>- Thay mặt Chủ tịch UBND xã thực hiện kiểm tra, đôn đốc các phòng ban, thực hiện Nghị quyết, Kết luận, Thông báo của Đảng ủy, Ban Thường vụ Đảng ủy, HĐND xã, Thường trực HĐND xã; Quyết định, Chỉ thị, Chương trình, Kế hoạch công tác của UBND xã, Chủ tịch UBND xã và giải quyết các vấn đề liên quan đến lĩnh vực phụ trách.</p>
+<p>- Thực hiện các công việc, nhiệm vụ khác theo sự phân công, ủy quyền của Chủ tịch UBND xã. Phân công phụ trách địa bàn các thôn xã Mỹ Lộc cũ: Vạn Định, Vạn Phú, Tân Lộc, Nghĩa Lộc, An Bão, An Tường, Cửu Thành, Vĩnh Thuận và Tân Ốc.</p>
+`;
+
+/* ===== CHỨC NĂNG ===== */
+function openModal(id,n,r,d){
+    modal.style.display="flex";
+    modalImg.src=document.getElementById(id).src;
+    modalName.innerText=n;
+    modalRole.innerText=r;
+    modalDesc.innerHTML=d;
+}
+function closeModal(){modal.style.display="none"}
+
+function adminLogin(){
+    const p=prompt("Nhập mật khẩu quản trị:");
+    if(p===adminPassword){
+        alert("Chế độ quản trị: Click ảnh để đổi");
+        document.querySelectorAll(".person-img").forEach(img=>{
+            img.onclick=()=>{
+                currentImgId=img.id;
+                imgUpload.click();
+            }
+        });
+    } else alert("Sai mật khẩu!");
+}
+
+function uploadImg(e){
+    const f=e.target.files[0];
+    if(!f)return;
+    const r=new FileReader();
+    r.onload=()=>{
+        localStorage.setItem(currentImgId,r.result);
+        document.getElementById(currentImgId).src=r.result;
+    };
+    r.readAsDataURL(f);
+}
+
+["img1","img2","img3"].forEach(id=>{
+    document.getElementById(id).src=
+        localStorage.getItem(id)||
+        "https://via.placeholder.com/160x220?text=Ảnh";
+});
+</script>
+</body>
+</html>
