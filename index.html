@@ -2,32 +2,34 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Lãnh Đạo UBND xã</title>
+<title>Lãnh đạo UBND xã</title>
 
 <style>
 *{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
-body{margin:0;background:#f4f6f8}
+body{margin:0;background:transparent}
 .container{max-width:1100px;margin:50px auto;text-align:center}
 h1{color:#0d47a1;margin-bottom:40px}
 
-/* ẢNH */
 .person-img{
     width:160px;height:220px;object-fit:cover;
     border-radius:12px;border:4px solid #1565c0;
+    cursor:pointer
 }
+.view-only .person-img{cursor:default}
+
 .role{color:#1565c0;font-weight:600;margin-top:8px}
 h3{margin:6px 0 0}
 
-/* CHỈ XEM */
-.view-only .person-img{
-    cursor:default;
-}
-
-/* BỐ CỤC */
 .chairman{margin-bottom:60px}
 .deputies{display:flex;justify-content:center;gap:50px;flex-wrap:wrap}
 
-/* MODAL */
+.admin-bar{text-align:right;margin-bottom:15px}
+.admin-bar button{
+    padding:6px 12px;background:#1565c0;color:#fff;
+    border:none;border-radius:4px;cursor:pointer
+}
+input[type=file]{display:none}
+
 .modal{
     display:none;position:fixed;inset:0;
     background:rgba(0,0,0,.6);
@@ -42,47 +44,27 @@ h3{margin:6px 0 0}
     border-radius:10px;border:4px solid #1565c0
 }
 .modal-content h2{margin:15px 0 5px}
-.desc-box{
-    margin-top:15px;
-    max-height:300px;
-    overflow-y:auto;
-    padding-right:10px
-}
-.desc-box p{
-    text-align:justify;
-    line-height:1.65;
-    margin-bottom:10px;
-    font-size:15px
-}
-.close{
-    position:absolute;top:10px;right:15px;
-    font-size:26px;cursor:pointer
-}
-
-/* QUẢN TRỊ */
-.admin-bar{text-align:right;margin-bottom:15px}
-.admin-bar button{
-    padding:6px 12px;
-    background:#1565c0;color:#fff;
-    border:none;border-radius:4px;cursor:pointer
-}
-input[type=file]{display:none}
+.desc-box{margin-top:15px;max-height:300px;overflow-y:auto}
+.desc-box p{text-align:justify;line-height:1.65;font-size:15px}
+.close{position:absolute;top:10px;right:15px;font-size:26px;cursor:pointer}
 </style>
 </head>
 
 <body class="view-only">
 <div class="container">
+
 <h1>LÃNH ĐẠO UBND XÃ</h1>
 
-<div class="admin-bar">
-<button onclick="adminLogin()">Quản trị</button>
-<input type="file" id="imgUpload" accept="image/*" onchange="uploadImg(event)">
+<div class="admin-bar" id="adminBar">
+    <button onclick="adminLogin()">Quản trị</button>
+    <input type="file" id="imgUpload" accept="image/*" onchange="uploadImg(event)">
 </div>
 
 <!-- CHỦ TỊCH -->
 <div class="chairman">
-<img id="img1" class="person-img" src=""
- onclick="openModal('img1','ĐẶNG ĐÌNH TRIỀU','Chủ tịch UBND xã', chairmanDesc)">
+<img id="img1" class="person-img"
+     onclick="openModal('img1','ĐẶNG ĐÌNH TRIỀU','Chủ tịch UBND xã',chairmanDesc)"
+     ondblclick="adminEditImg('img1')">
 <p class="role">Chủ tịch UBND xã</p>
 <h3>ĐẶNG ĐÌNH TRIỀU</h3>
 </div>
@@ -90,15 +72,17 @@ input[type=file]{display:none}
 <!-- PHÓ CHỦ TỊCH -->
 <div class="deputies">
 <div>
-<img id="img2" class="person-img" src=""
- onclick="openModal('img2','TRẦN PHÚC HUY','Phó Chủ tịch UBND xã', deputy1Desc)">
+<img id="img2" class="person-img"
+     onclick="openModal('img2','TRẦN PHÚC HUY','Phó Chủ tịch UBND xã',deputy1Desc)"
+     ondblclick="adminEditImg('img2')">
 <p class="role">Phó Chủ tịch</p>
 <h3>TRẦN PHÚC HUY</h3>
 </div>
 
 <div>
-<img id="img3" class="person-img" src=""
- onclick="openModal('img3','HUỲNH TẤN CƯỜNG','Phó Chủ tịch UBND xã', deputy2Desc)">
+<img id="img3" class="person-img"
+     onclick="openModal('img3','HUỲNH TẤN CƯỜNG','Phó Chủ tịch UBND xã',deputy2Desc)"
+     ondblclick="adminEditImg('img3')">
 <p class="role">Phó Chủ tịch</p>
 <h3>HUỲNH TẤN CƯỜNG</h3>
 </div>
@@ -117,10 +101,30 @@ input[type=file]{display:none}
 </div>
 
 <script>
-/* ===== HASH QUẢN TRỊ (tạo trên máy bạn) ===== */
-const ADMIN_HASH = "DÁN_HASH_SHA256_CỦA_BẠN_VÀO_ĐÂY";
+/* ===== HASH ===== */
+let ADMIN_HASH = localStorage.getItem("ADMIN_HASH") || "";
+let currentImgId="";
 
-let currentImgId = "";
+async function sha256(t){
+    const d=new TextEncoder().encode(t);
+    const h=await crypto.subtle.digest("SHA-256",d);
+    return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+async function initPassword(){
+    const p=prompt("Tạo mật khẩu quản trị:");
+    if(!p) return;
+    ADMIN_HASH=await sha256(p);
+    localStorage.setItem("ADMIN_HASH",ADMIN_HASH);
+    alert("Đã tạo mật khẩu. Tải lại trang.");
+    location.reload();
+}
+if(!ADMIN_HASH) setTimeout(initPassword,300);
+
+/* ẨN QUẢN TRỊ TRONG IFRAME */
+if(window.self!==window.top){
+    document.getElementById("adminBar").style.display="none";
+}
 
 /* ===== GIỚI THIỆU ===== */
 const chairmanDesc=`
@@ -163,23 +167,6 @@ const deputy2Desc=`
 <p>- Thực hiện các công việc, nhiệm vụ khác theo sự phân công, ủy quyền của Chủ tịch UBND xã. Phân công phụ trách địa bàn các thôn xã Mỹ Lộc cũ: Vạn Định, Vạn Phú, Tân Lộc, Nghĩa Lộc, An Bão, An Tường, Cửu Thành, Vĩnh Thuận và Tân Ốc.</p>
 `;
 
-/* ===== SHA-256 ===== */
-async function sha256(text){
-    const data = new TextEncoder().encode(text);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    return Array.from(new Uint8Array(hashBuffer))
-        .map(b=>b.toString(16).padStart(2,"0")).join("");
-}
-
-/* ===== CHỈ XEM MẶC ĐỊNH ===== */
-function lockView(){
-    document.body.classList.add("view-only");
-    document.querySelectorAll(".person-img").forEach(img=>{
-        img.onclick = img.onclick; // chỉ xem modal
-    });
-}
-lockView();
-
 /* ===== MODAL ===== */
 function openModal(id,n,r,d){
     modal.style.display="flex";
@@ -188,31 +175,25 @@ function openModal(id,n,r,d){
     modalRole.innerText=r;
     modalDesc.innerHTML=d;
 }
-function closeModal(){modal.style.display="none";}
+function closeModal(){modal.style.display="none"}
 
-/* ===== ĐĂNG NHẬP ===== */
+/* ===== ADMIN ===== */
 async function adminLogin(){
-    const p = prompt("Nhập mật khẩu quản trị:");
+    const p=prompt("Nhập mật khẩu quản trị:");
     if(!p) return;
-
-    const hash = await sha256(p);
-    if(hash === ADMIN_HASH){
-        alert("Đã vào chế độ quản trị");
-
+    if(await sha256(p)===ADMIN_HASH){
+        alert("Đã vào chế độ quản trị\n(Double-click ảnh để đổi)");
         document.body.classList.remove("view-only");
-        document.querySelectorAll(".person-img").forEach(img=>{
-            img.style.cursor="pointer";
-            img.onclick=()=>{
-                currentImgId=img.id;
-                imgUpload.click();
-            };
-        });
-    }else{
-        alert("Sai mật khẩu!");
-    }
+    }else alert("Sai mật khẩu!");
 }
 
-/* ===== UPLOAD ẢNH ===== */
+function adminEditImg(id){
+    if(document.body.classList.contains("view-only")) return;
+    currentImgId=id;
+    imgUpload.click();
+}
+
+/* ===== UPLOAD ===== */
 function uploadImg(e){
     const f=e.target.files[0];
     if(!f) return;
