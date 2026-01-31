@@ -15,6 +15,8 @@ h1{color:#0d47a1;margin-bottom:40px}
     border-radius:12px;border:4px solid #1565c0;
     cursor:pointer
 }
+.view-only .person-img{cursor:default}
+
 .role{color:#1565c0;font-weight:600;margin-top:8px}
 h3{margin:6px 0 0}
 
@@ -52,7 +54,7 @@ input[type=file]{display:none}
 
 <h1>LÃNH ĐẠO UBND XÃ</h1>
 
-<div class="admin-bar" id="adminBar">
+<div class="admin-bar">
     <button onclick="adminLogin()">Quản trị</button>
     <input type="file" id="imgUpload" accept="image/*" onchange="uploadImg(event)">
 </div>
@@ -95,13 +97,7 @@ input[type=file]{display:none}
 </div>
 
 <script>
-/* ===== KIỂM TRA IFRAME ===== */
-const IS_IFRAME = window.self !== window.top;
-if(IS_IFRAME){
-    document.getElementById("adminBar").style.display="none";
-}
-
-/* ===== MẬT KHẨU ===== */
+/* ================== AUTH ================== */
 let ADMIN_HASH = localStorage.getItem("ADMIN_HASH") || "";
 let currentImgId="";
 
@@ -112,51 +108,44 @@ async function sha256(t){
 }
 
 async function initPassword(){
-    if(IS_IFRAME) return;
     const p=prompt("Tạo mật khẩu quản trị:");
     if(!p) return;
     ADMIN_HASH=await sha256(p);
     localStorage.setItem("ADMIN_HASH",ADMIN_HASH);
-    alert("Đã tạo mật khẩu. Tải lại trang.");
     location.reload();
 }
 if(!ADMIN_HASH) setTimeout(initPassword,300);
 
-/* ===== CLICK ẢNH ===== */
+async function adminLogin(){
+    const p=prompt("Nhập mật khẩu quản trị:");
+    if(!p) return;
+    if(await sha256(p)===ADMIN_HASH){
+        document.body.classList.remove("view-only");
+        alert("Đã vào quản trị\nClick ảnh để đổi ảnh");
+    }else alert("Sai mật khẩu!");
+}
+
+/* ================== CLICK ẢNH ================== */
 function handleImgClick(id,name,role,desc){
     if(document.body.classList.contains("view-only")){
         openModal(id,name,role,desc);
     }else{
-        if(IS_IFRAME) return;
         currentImgId=id;
         imgUpload.click();
     }
 }
 
-/* ===== ADMIN LOGIN ===== */
-async function adminLogin(){
-    if(IS_IFRAME) return;
-    const p=prompt("Nhập mật khẩu quản trị:");
-    if(!p) return;
-    if(await sha256(p)===ADMIN_HASH){
-        alert("Đã vào quản trị\nClick ảnh để đổi ảnh");
-        document.body.classList.remove("view-only");
-    }else alert("Sai mật khẩu!");
-}
-
-/* ===== UPLOAD ẢNH: SERVER + LOCAL ===== */
+/* ================== UPLOAD ================== */
 function uploadImg(e){
     const f=e.target.files[0];
     if(!f) return;
 
-    /* LƯU LOCALSTORAGE */
+    /* LocalStorage */
     const reader=new FileReader();
-    reader.onload=function(){
-        localStorage.setItem(currentImgId,reader.result);
-    };
+    reader.onload=()=>localStorage.setItem(currentImgId,reader.result);
     reader.readAsDataURL(f);
 
-    /* UPLOAD SERVER */
+    /* Server */
     const fd=new FormData();
     fd.append("image",f);
     fd.append("id",currentImgId);
@@ -169,7 +158,7 @@ function uploadImg(e){
     .catch(()=>alert("Upload lỗi"));
 }
 
-/* ===== LOAD ẢNH: LOCAL → SERVER ===== */
+/* ================== LOAD ẢNH ================== */
 const serverImgs={
   img1:"uploads/img1.jpg",
   img2:"uploads/img2.jpg",
@@ -177,11 +166,10 @@ const serverImgs={
 };
 Object.keys(serverImgs).forEach(id=>{
     document.getElementById(id).src =
-        localStorage.getItem(id) ||
-        serverImgs[id];
+        localStorage.getItem(id) || serverImgs[id];
 });
 
-/* ===== MODAL ===== */
+/* ================== MODAL ================== */
 function openModal(id,n,r,d){
     modal.style.display="flex";
     modalImg.src=document.getElementById(id).src;
