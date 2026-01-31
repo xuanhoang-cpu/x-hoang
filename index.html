@@ -1,1 +1,173 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Cổng TTĐT UBND xã</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
+<style>
+*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+body{margin:0;background:#f4f6f8}
+
+/* HEADER */
+.site-header{background:#0d47a1;color:#fff}
+.header-inner{
+  max-width:1100px;margin:auto;
+  display:flex;align-items:center;gap:18px;padding:14px
+}
+.logo{width:70px}
+.title .l1{font-size:14px}
+.title .l2{font-size:22px;font-weight:700}
+.title .l3{font-size:13px;opacity:.9}
+
+/* MAIN */
+.container{max-width:1100px;margin:30px auto;text-align:center}
+h1{color:#0d47a1;margin-bottom:40px}
+
+/* PERSON */
+.person-img{
+  width:160px;height:220px;object-fit:cover;
+  border-radius:12px;border:4px solid #1565c0;
+  cursor:default;
+}
+.role{color:#1565c0;font-weight:600;margin-top:8px}
+.chairman{margin-bottom:60px}
+.deputies{display:flex;justify-content:center;gap:50px;flex-wrap:wrap}
+
+/* ADMIN */
+.admin-bar{display:none;text-align:right;margin-bottom:10px}
+.admin-bar button{
+  padding:6px 12px;margin-left:6px;
+  background:#1565c0;color:#fff;
+  border:none;border-radius:4px;cursor:pointer
+}
+input[type=file]{display:none}
+
+/* FULLSCREEN */
+.present .site-header,
+.present .admin-bar{display:none}
+.present .container{max-width:100%;margin-top:40px}
+.present .person-img{width:220px;height:300px}
+
+/* MODAL */
+.modal{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.6);
+  justify-content:center;align-items:center;z-index:999
+}
+.modal-content{
+  background:#fff;width:600px;
+  padding:20px;border-radius:10px
+}
+</style>
+</head>
+
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <img class="logo"
+     src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Emblem_of_Vietnam.svg">
+    <div class="title">
+      <div class="l1">ỦY BAN NHÂN DÂN XÃ</div>
+      <div class="l2">MỸ ĐỨC</div>
+      <div class="l3">CỔNG THÔNG TIN ĐIỆN TỬ</div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+<h1>LÃNH ĐẠO UBND XÃ</h1>
+
+<div class="admin-bar">
+<button onclick="adminLogin()">Quản trị</button>
+<button onclick="enterPresent()">Trình chiếu</button>
+<input type="file" id="imgUpload" accept="image/*" onchange="uploadImg(event)">
+</div>
+
+<div class="chairman">
+<img id="img1" class="person-img">
+<p class="role">Chủ tịch UBND xã</p>
+<h3>ĐẶNG ĐÌNH TRIỀU</h3>
+</div>
+
+<div class="deputies">
+<div>
+<img id="img2" class="person-img">
+<p class="role">Phó Chủ tịch</p>
+<h3>TRẦN PHÚC HUY</h3>
+</div>
+<div>
+<img id="img3" class="person-img">
+<p class="role">Phó Chủ tịch</p>
+<h3>HUỲNH TẤN CƯỜNG</h3>
+</div>
+</div>
+</div>
+
+<script>
+/* ===== CONFIG ===== */
+const DEFAULT_HASH="240be518fabd2724ddb6f04eeb1da596";
+let ADMIN_HASH=localStorage.getItem("adminHash")||DEFAULT_HASH;
+let currentImgId="";
+const isAdmin=location.search.includes("admin=1");
+const isPresent=location.search.includes("present=1");
+
+/* HASH */
+async function hash(p){
+  const b=new TextEncoder().encode(p);
+  const h=await crypto.subtle.digest("SHA-256",b);
+  return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+
+/* ADMIN LOGIN */
+async function adminLogin(){
+  const p=prompt("Nhập mật khẩu quản trị:");
+  if(!p)return;
+  if(await hash(p)===ADMIN_HASH){
+    enableAdmin();
+    alert("Đã vào chế độ quản trị");
+  }else alert("Sai mật khẩu!");
+}
+
+function enableAdmin(){
+  document.querySelectorAll(".person-img").forEach(img=>{
+    img.style.cursor="pointer";
+    img.onclick=()=>{
+      currentImgId=img.id;
+      imgUpload.click();
+    }
+  });
+}
+
+/* UPLOAD IMAGE */
+function uploadImg(e){
+  const f=e.target.files[0];
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    localStorage.setItem(currentImgId,r.result);
+    document.getElementById(currentImgId).src=r.result;
+  };
+  r.readAsDataURL(f);
+}
+
+/* FULLSCREEN PRESENT */
+function enterPresent(){
+  document.body.classList.add("present");
+  document.documentElement.requestFullscreen();
+}
+
+/* INIT */
+["img1","img2","img3"].forEach(id=>{
+  document.getElementById(id).src=
+    localStorage.getItem(id)||
+    "https://via.placeholder.com/160x220?text=Ảnh";
+});
+
+if(isAdmin) document.querySelector(".admin-bar").style.display="block";
+if(isPresent) enterPresent();
+</script>
+
+</body>
+</html>
