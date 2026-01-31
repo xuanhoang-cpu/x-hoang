@@ -15,7 +15,7 @@ h1{color:#0d47a1;margin-bottom:40px}
     border-radius:12px;border:4px solid #1565c0;
     cursor:pointer
 }
-.view-only .person-img{cursor:default}
+.view-only .person-img{cursor:pointer}
 
 .role{color:#1565c0;font-weight:600;margin-top:8px}
 h3{margin:6px 0 0}
@@ -63,8 +63,7 @@ input[type=file]{display:none}
 <!-- CHỦ TỊCH -->
 <div class="chairman">
 <img id="img1" class="person-img"
-     onclick="openModal('img1','ĐẶNG ĐÌNH TRIỀU','Chủ tịch UBND xã',chairmanDesc)"
-     ondblclick="adminEditImg('img1')">
+     onclick="handleImgClick('img1','ĐẶNG ĐÌNH TRIỀU','Chủ tịch UBND xã',chairmanDesc)">
 <p class="role">Chủ tịch UBND xã</p>
 <h3>ĐẶNG ĐÌNH TRIỀU</h3>
 </div>
@@ -73,16 +72,14 @@ input[type=file]{display:none}
 <div class="deputies">
 <div>
 <img id="img2" class="person-img"
-     onclick="openModal('img2','TRẦN PHÚC HUY','Phó Chủ tịch UBND xã',deputy1Desc)"
-     ondblclick="adminEditImg('img2')">
+     onclick="handleImgClick('img2','TRẦN PHÚC HUY','Phó Chủ tịch UBND xã',deputy1Desc)">
 <p class="role">Phó Chủ tịch</p>
 <h3>TRẦN PHÚC HUY</h3>
 </div>
 
 <div>
 <img id="img3" class="person-img"
-     onclick="openModal('img3','HUỲNH TẤN CƯỜNG','Phó Chủ tịch UBND xã',deputy2Desc)"
-     ondblclick="adminEditImg('img3')">
+     onclick="handleImgClick('img3','HUỲNH TẤN CƯỜNG','Phó Chủ tịch UBND xã',deputy2Desc)">
 <p class="role">Phó Chủ tịch</p>
 <h3>HUỲNH TẤN CƯỜNG</h3>
 </div>
@@ -167,6 +164,17 @@ const deputy2Desc=`
 <p>- Thực hiện các công việc, nhiệm vụ khác theo sự phân công, ủy quyền của Chủ tịch UBND xã. Phân công phụ trách địa bàn các thôn xã Mỹ Lộc cũ: Vạn Định, Vạn Phú, Tân Lộc, Nghĩa Lộc, An Bão, An Tường, Cửu Thành, Vĩnh Thuận và Tân Ốc.</p>
 `;
 
+
+/* ===== CLICK ẢNH ===== */
+function handleImgClick(id,name,role,desc){
+    if(document.body.classList.contains("view-only")){
+        openModal(id,name,role,desc);
+    }else{
+        currentImgId=id;
+        imgUpload.click();
+    }
+}
+
 /* ===== MODAL ===== */
 function openModal(id,n,r,d){
     modal.style.display="flex";
@@ -182,15 +190,9 @@ async function adminLogin(){
     const p=prompt("Nhập mật khẩu quản trị:");
     if(!p) return;
     if(await sha256(p)===ADMIN_HASH){
-        alert("Đã vào chế độ quản trị\n(Double-click ảnh để đổi)");
+        alert("Đã vào chế độ quản trị\nClick ảnh để thay đổi ảnh");
         document.body.classList.remove("view-only");
     }else alert("Sai mật khẩu!");
-}
-
-function adminEditImg(id){
-    if(document.body.classList.contains("view-only")) return;
-    currentImgId=id;
-    imgUpload.click();
 }
 
 /* ===== UPLOAD ===== */
