@@ -95,6 +95,13 @@ input[type=file]{display:none}
 </div>
 
 <script>
+/* ===== KIỂM TRA IFRAME ===== */
+const IS_IFRAME = window.self !== window.top;
+if(IS_IFRAME){
+    document.getElementById("adminBar").style.display="none";
+}
+
+/* ===== MẬT KHẨU ===== */
 let ADMIN_HASH = localStorage.getItem("ADMIN_HASH") || "";
 let currentImgId="";
 
@@ -105,6 +112,7 @@ async function sha256(t){
 }
 
 async function initPassword(){
+    if(IS_IFRAME) return;
     const p=prompt("Tạo mật khẩu quản trị:");
     if(!p) return;
     ADMIN_HASH=await sha256(p);
@@ -114,29 +122,20 @@ async function initPassword(){
 }
 if(!ADMIN_HASH) setTimeout(initPassword,300);
 
-if(window.self!==window.top){
-    document.getElementById("adminBar").style.display="none";
-}
-
+/* ===== CLICK ẢNH ===== */
 function handleImgClick(id,name,role,desc){
     if(document.body.classList.contains("view-only")){
         openModal(id,name,role,desc);
     }else{
+        if(IS_IFRAME) return;
         currentImgId=id;
         imgUpload.click();
     }
 }
 
-function openModal(id,n,r,d){
-    modal.style.display="flex";
-    modalImg.src=document.getElementById(id).src;
-    modalName.innerText=n;
-    modalRole.innerText=r;
-    modalDesc.innerHTML=d;
-}
-function closeModal(){modal.style.display="none"}
-
+/* ===== ADMIN LOGIN ===== */
 async function adminLogin(){
+    if(IS_IFRAME) return;
     const p=prompt("Nhập mật khẩu quản trị:");
     if(!p) return;
     if(await sha256(p)===ADMIN_HASH){
@@ -145,10 +144,19 @@ async function adminLogin(){
     }else alert("Sai mật khẩu!");
 }
 
+/* ===== UPLOAD ẢNH: SERVER + LOCAL ===== */
 function uploadImg(e){
     const f=e.target.files[0];
     if(!f) return;
 
+    /* LƯU LOCALSTORAGE */
+    const reader=new FileReader();
+    reader.onload=function(){
+        localStorage.setItem(currentImgId,reader.result);
+    };
+    reader.readAsDataURL(f);
+
+    /* UPLOAD SERVER */
     const fd=new FormData();
     fd.append("image",f);
     fd.append("id",currentImgId);
@@ -161,15 +169,27 @@ function uploadImg(e){
     .catch(()=>alert("Upload lỗi"));
 }
 
-/* ẢNH TỪ SERVER */
-const imgs={
+/* ===== LOAD ẢNH: LOCAL → SERVER ===== */
+const serverImgs={
   img1:"uploads/img1.jpg",
   img2:"uploads/img2.jpg",
   img3:"uploads/img3.jpg"
 };
-Object.keys(imgs).forEach(id=>{
-    document.getElementById(id).src=imgs[id];
+Object.keys(serverImgs).forEach(id=>{
+    document.getElementById(id).src =
+        localStorage.getItem(id) ||
+        serverImgs[id];
 });
+
+/* ===== MODAL ===== */
+function openModal(id,n,r,d){
+    modal.style.display="flex";
+    modalImg.src=document.getElementById(id).src;
+    modalName.innerText=n;
+    modalRole.innerText=r;
+    modalDesc.innerHTML=d;
+}
+function closeModal(){modal.style.display="none"}
 
 /* ===== GIỚI THIỆU ===== */
 const chairmanDesc=`
